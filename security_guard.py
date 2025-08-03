@@ -3,7 +3,7 @@ import time
 import logging
 from typing import Dict, Any, Tuple
 from dataclasses import dataclass
-from llm_guard import scan_prompt, scan_output
+from llm_guard import scan_prompt
 from llm_guard.input_scanners import (
     PromptInjection,
     BanSubstrings,
@@ -316,7 +316,9 @@ class SecurityGuard:
             # エラーが発生した場合は安全のためブロック
             return False, "", {"error": str(e)}
 
-    def scan_output(self, output: str, original_prompt: str = "") -> Tuple[bool, str, Dict[str, Any]]:
+    def scan_output(
+        self, output: str, original_prompt: str = ""
+    ) -> Tuple[bool, str, Dict[str, Any]]:
         """出力テキストのスキャン（改善版）"""
         if not self.config.enable_output_scanning or not self.output_scanners:
             return True, output, {}
@@ -324,11 +326,12 @@ class SecurityGuard:
         try:
             # LLM-Guardのスキャンを実行（正しい引数順序）
             from llm_guard import scan_output as llm_guard_scan_output
+
             scan_result = llm_guard_scan_output(
                 scanners=self.output_scanners,
                 prompt=original_prompt,
                 output=output,
-                fail_fast=False
+                fail_fast=False,
             )
 
             # 結果を処理
@@ -387,9 +390,13 @@ class SecurityGuard:
 
         return True, sanitized_prompt, scan_info
 
-    def validate_response(self, response: str, original_prompt: str = "") -> Tuple[bool, str, Dict[str, Any]]:
+    def validate_response(
+        self, response: str, original_prompt: str = ""
+    ) -> Tuple[bool, str, Dict[str, Any]]:
         """レスポンスの検証（改善版）"""
-        is_valid, sanitized_response, scan_info = self.scan_output(response, original_prompt)
+        is_valid, sanitized_response, scan_info = self.scan_output(
+            response, original_prompt
+        )
 
         if not is_valid:
             return (
